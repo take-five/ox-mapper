@@ -40,7 +40,7 @@ static stack* create_stack() {
 static VALUE stack_top(VALUE self) {
     stack *a_stack = get_stack_from_self(self);
 
-    if(a_stack->size) {
+    if(a_stack->size > 0) {
         return a_stack->items[a_stack->size - 1];
     } else {
         return Qnil;
