@@ -1,3 +1,4 @@
+# coding: utf-8
 require "ox/mapper/version"
 
 module Ox

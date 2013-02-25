@@ -22,7 +22,6 @@ typedef struct {
 static VALUE cStack; // stack class
 static VALUE cStackOverflow; // class StackOverflow
 
-
 static stack* get_stack_from_self(VALUE self) {
 	stack *a_stack;
 	Data_Get_Struct(self, stack, a_stack);

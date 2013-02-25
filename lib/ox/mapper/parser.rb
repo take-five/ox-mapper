@@ -1,3 +1,4 @@
+# coding: utf-8
 require "ox"
 require "ox/mapper/element"
 
@@ -17,7 +18,7 @@ module Ox
     #   parser.on_element(:offer) { |offer| puts offer }
     #   parser.on_attribute(:offer => [:id]) { |v| v.to_i }
     class Parser < Ox::Sax
-      OUTPUT_ENCODING = "UTF-8".freeze
+      OUTPUT_ENCODING = Encoding::UTF_8
 
       def initialize
         @stack = CStack.new
