@@ -4,12 +4,12 @@ module Ox
   module Mapper
     # An element representing XML-node
     class Element
-      attr_accessor :parent, :name, :text
+      attr_accessor :parent, :name, :text, :line, :column
       attr_writer :attributes
 
       # Initialize element with +name+
-      def initialize(name)
-        @name = name
+      def initialize(name, line = nil, column = nil)
+        @name, @line, @column = name, line, column
       end
 
       def []=(k, v)

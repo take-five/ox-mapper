@@ -21,6 +21,9 @@ module Ox
       OUTPUT_ENCODING = Encoding::UTF_8
 
       def initialize
+        # ox supports lines and columns starting from 1.9.0
+        # we just need to set these ivars
+        @line, @column = nil, nil
         @stack = CStack.new
         @callbacks = Hash.new { |h, k| h[k] = [] }
         @attribute_callbacks = Hash.new
@@ -52,7 +55,7 @@ module Ox
       # "start_element" handler just pushes an element to stack and assigns a pointer to parent element
       # @api private
       def start_element(name) #:nodoc:
-        element = Ox::Mapper::Element.new(name)
+        element = Ox::Mapper::Element.new(name, @line, @column)
         element.parent = @stack.top
 
         @stack.push(element)
