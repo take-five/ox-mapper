@@ -1,11 +1,11 @@
 # coding: utf-8
-require "ox"
-require "ox/mapper/element"
+require 'ox'
+require 'ox/mapper/element'
 
 begin
-  require "cstack"
+  require 'cstack'
 rescue LoadError
-  require "rubystack"
+  require 'rubystack'
 end
 
 module Ox
@@ -71,6 +71,7 @@ module Ox
       def text(value) #:nodoc:
         @stack.top.text = value if @stack.size > 0
       end
+      alias cdata text
 
       # "end_element" handler pushes an element if it is attached to callbacks
       # @api private
@@ -79,7 +80,7 @@ module Ox
 
         # fire callback
         if @callbacks.has_key?(element.name)
-          element.text.encode!("UTF-8") if element.text && !element.text.ascii_only?
+          element.text.encode!(OUTPUT_ENCODING) if element.text && !element.text.ascii_only?
 
           @callbacks[element.name].each { |cb| cb.call(element) }
         end

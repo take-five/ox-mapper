@@ -1,13 +1,13 @@
 # coding: utf-8
 
-require "rubygems"
-require "bundler/setup"
-require "rspec"
-require "simplecov"
+require 'rubygems'
+require 'bundler/setup'
+require 'rspec'
+require 'simplecov'
 
 #RSpec.configure do |config|
 #end
 
 SimpleCov.start do
-  add_filter "/spec/"
+  add_filter '/spec/'
 end
