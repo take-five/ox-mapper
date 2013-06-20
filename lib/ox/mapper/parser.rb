@@ -69,7 +69,7 @@ module Ox
 
       # @api private
       def text(value) #:nodoc:
-        @stack.top.text = value if @stack.size > 0
+        @stack.top.text = value && value.strip if @stack.size > 0
       end
       alias cdata text
 

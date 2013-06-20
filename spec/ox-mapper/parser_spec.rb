@@ -16,7 +16,11 @@ describe Ox::Mapper::Parser do
     <price value="2"/>
   </offer>
   <text>text</text>
-  <text><![CDATA[text]]></text>
+  <text>
+    <![CDATA[
+    text
+    ]]>
+  </text>
 </xml>
     XML
   end
