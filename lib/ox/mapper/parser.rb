@@ -36,23 +36,38 @@ module Ox
 
       # Define a callbacks to be called when +elements+ processed
       #
-      # Usage:
+      # @example
       #   parser.on_element(:offer, :price) { |elem| p elem }
+      #
+      # @param [Array<String, Symbol>] elements elements names
+      # @yield [element]
+      # @yieldparam [Ox::Mapper::Element] element
       def on_element(*elements, &block)
-        elements.each { |e| @callbacks[e] << block }
+        elements.each { |e| @callbacks[e.to_sym] << block }
       end
 
-      # Usage:
+      # Set attribute callback
+      #
+      # @example
+      #   parser.collect_attribute(:offer => :id, 'ns:offer' => 'ns:id')
       #   parser.on_attribute(:offer => :price) { |p| Float(p) }
+      #
+      # @param [Hash{String, Symbol => String, Symbol}] map hash with element names as keys
+      #                                                 and attributes names as value
+      # @yield [value] yields attribute value. Value returned by block stored into element attributes hash.
+      # @yieldparam [String] value attribute value
       def on_attribute(map, &block)
         map.each_pair do |k, attributes|
-          @attribute_callbacks[k] ||= Hash.new
-          [attributes].flatten.each { |attr| @attribute_callbacks[k][attr] = block }
+          element = k.to_sym
+
+          @attribute_callbacks[element] ||= Hash.new
+          [attributes].flatten.each { |attr| @attribute_callbacks[element][attr.to_sym] = block }
         end
       end
       alias collect_attribute on_attribute
 
       # "start_element" handler just pushes an element to stack and assigns a pointer to parent element
+      #
       # @api private
       def start_element(name) #:nodoc:
         element = Ox::Mapper::Element.new(name, @line, @column)
@@ -62,6 +77,7 @@ module Ox
       end
 
       # attributes handler
+      #
       # @api private
       def attr(name, value) #:nodoc:
         @stack.top[name] = transform_attribute(name, value) if collect_attribute?(name)

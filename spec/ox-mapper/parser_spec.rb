@@ -21,6 +21,7 @@ describe Ox::Mapper::Parser do
     text
     ]]>
   </text>
+  <ns:offer ns:id="3" />
 </xml>
     XML
   end
@@ -38,26 +39,28 @@ describe Ox::Mapper::Parser do
     end
 
     context 'when multiple elements given' do
-      before { parser.on_element(:offer, :price) { |e| elements << e } }
-      before { parser.collect_attribute(:offer => :id, :price => :value) }
+      before { parser.on_element(:offer, :price, 'ns:offer') { |e| elements << e } }
+      before { parser.collect_attribute(:offer => :id, :price => :value, 'ns:offer' => 'ns:id') }
       before { parser.parse(xml) }
 
       subject { elements }
 
-      it { should have(4).items }
+      it { should have(5).items }
 
       it 'should collect elements in ascending order (starting from leafs to root)' do
         elements[0].name.should eq :price
-        elements[0][:value].should eq "1"
+        elements[0][:value].should eq '1'
 
         elements[1].name.should eq :offer
-        elements[1][:id].should eq "1"
+        elements[1][:id].should eq '1'
 
         elements[2].name.should eq :price
-        elements[2][:value].should eq "2"
+        elements[2][:value].should eq '2'
 
         elements[3].name.should eq :offer
-        elements[3][:id].should eq "2"
+        elements[3][:id].should eq '2'
+
+        elements[4]['ns:id'].should eq '3'
       end
 
       it 'should collect parent element' do
@@ -77,7 +80,7 @@ describe Ox::Mapper::Parser do
       before { parser.collect_attribute(:offer => :id) }
       before { parser.parse(xml) }
 
-      its([:id]) { should eq "1" }
+      its([:id]) { should eq '1' }
       its(:attributes) { should_not have_key(:id2) }
     end
 
