@@ -36,7 +36,7 @@ module Ox
 
       # Get attributes hash
       #
-      # @param [Hash] attributes
+      # @return [Hash] attributes
       def attributes
         @attributes ||= {}
       end
