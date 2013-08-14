@@ -2,12 +2,6 @@
 require 'ox'
 require 'ox/mapper/element'
 
-begin
-  require 'cstack'
-rescue LoadError
-  require 'rubystack'
-end
-
 module Ox
   module Mapper
     # Configurable SAX-parser
@@ -24,7 +18,7 @@ module Ox
         # ox supports lines and columns starting from 1.9.0
         # we just need to set these ivars
         @line, @column = nil, nil
-        @stack = CStack.new
+        @stack = Array.new
         @callbacks = Hash.new { |h, k| h[k] = [] }
         @attribute_callbacks = Hash.new
       end
@@ -71,7 +65,7 @@ module Ox
       # @api private
       def start_element(name) #:nodoc:
         element = Ox::Mapper::Element.new(name, @line, @column)
-        element.parent = @stack.top
+        element.parent = @stack.last
 
         @stack.push(element)
       end
@@ -80,12 +74,12 @@ module Ox
       #
       # @api private
       def attr(name, value) #:nodoc:
-        @stack.top[name] = transform_attribute(name, value) if collect_attribute?(name)
+        @stack.last[name] = transform_attribute(name, value) if collect_attribute?(name)
       end
 
       # @api private
       def text(value) #:nodoc:
-        @stack.top.text = value && value.strip if @stack.size > 0
+        @stack.last.text = value && value.strip if @stack.size > 0
       end
       alias cdata text
 
@@ -104,7 +98,7 @@ module Ox
 
       private
       def collect_attribute?(name) #:nodoc:
-        top_name = @stack.size > 0 && @stack.top.name
+        top_name = @stack.size > 0 && @stack.last.name
 
         top_name &&
             @attribute_callbacks.key?(top_name) &&
@@ -113,7 +107,7 @@ module Ox
 
       # Fetch callback for attribute +name+
       def attribute_callback(name) #:nodoc:
-        @attribute_callbacks[@stack.top.name][name]
+        @attribute_callbacks[@stack.last.name][name]
       end
 
       # Apply callback to attribute or just transcode +value+ if callback is empty
