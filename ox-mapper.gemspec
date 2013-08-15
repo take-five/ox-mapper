@@ -8,8 +8,7 @@ Gem::Specification.new do |gem|
   gem.version       = Ox::Mapper::VERSION
   gem.authors       = ['Alexei Mikhailov']
   gem.email         = %w(amikhailov83@gmail.com)
-  gem.description   = %q{ox-mapper's intention is to simplify creation of parsers based on `ox`}
-  gem.summary       = %q{Wrapper around Ox API}
+  gem.summary       = %q{Create SAX parsers based on `ox` with simple DSL}
   gem.homepage      = 'https://github.com/take-five/ox-mapper'
 
   gem.files         = `git ls-files`.split($/)

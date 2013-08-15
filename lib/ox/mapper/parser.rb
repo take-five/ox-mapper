@@ -1,6 +1,6 @@
 # coding: utf-8
 require 'ox'
-require 'ox/mapper/element'
+require 'ox/mapper/handler'
 
 module Ox
   module Mapper
@@ -9,121 +9,58 @@ module Ox
     # Usage:
     #   parser = Mapper.new
     #
-    #   parser.on_element(:offer) { |offer| puts offer }
-    #   parser.on_attribute(:offer => [:id]) { |v| v.to_i }
-    class Parser < Ox::Sax
-      OUTPUT_ENCODING = Encoding::UTF_8
-
+    #   parser.on(:offer) { |offer| puts offer }
+    #   parser.on(:offer => [:id]) { |v| v.to_i }
+    class Parser
       def initialize
-        # ox supports lines and columns starting from 1.9.0
-        # we just need to set these ivars
-        @line, @column = nil, nil
-        @stack = Array.new
-        @callbacks = Hash.new { |h, k| h[k] = [] }
-        @attribute_callbacks = Hash.new
+        @handler = Handler.new
       end
 
       # Parse given +io+ object
       def parse(io, options = {})
-        Ox.sax_parse(self, io, options)
+        Ox.sax_parse(@handler, io, options)
       end
 
       # Define a callbacks to be called when +elements+ processed
       #
       # @example
-      #   parser.on_element(:offer, :price) { |elem| p elem }
+      #   parser.on(:offer, :price) { |elem| p elem }
+      #   parser.on(:book, :attributes => [:author, :isbn]) { |book| p book[:author], book[:isbn] }
       #
       # @param [Array<String, Symbol>] elements elements names
       # @yield [element]
       # @yieldparam [Ox::Mapper::Element] element
-      def on_element(*elements, &block)
-        elements.each { |e| @callbacks[e.to_sym] << block }
+      # @option options [Array<String, Symbol>] :attributes list of collected attributes
+      def on(*elements, &block)
+        options = (Hash === elements.last) ? elements.pop : {}
+
+        attributes = Array(options[:attributes]).flatten
+
+        elements.each do |e|
+          @handler.setup_element_callback(e, block)
+
+          attributes.each { |attr| @handler.collect_attribute(e, attr) }
+        end
       end
+      alias on_element on
 
       # Set attribute callback
       #
       # @example
       #   parser.collect_attribute(:offer => :id, 'ns:offer' => 'ns:id')
-      #   parser.on_attribute(:offer => :price) { |p| Float(p) }
       #
       # @param [Hash{String, Symbol => String, Symbol}] map hash with element names as keys
       #                                                 and attributes names as value
-      # @yield [value] yields attribute value. Value returned by block stored into element attributes hash.
-      # @yieldparam [String] value attribute value
-      def on_attribute(map, &block)
+      # @deprecated
+      def collect_attribute(map)
+        warn 'Ox::Mapper::Parser#on_attribute method is deprecated and shall be removed in future versions. '\
+             'Please use #on(element_name, :attributes => [...]) notation.'
+
         map.each_pair do |k, attributes|
-          element = k.to_sym
-
-          @attribute_callbacks[element] ||= Hash.new
-          [attributes].flatten.each { |attr| @attribute_callbacks[element][attr.to_sym] = block }
+          Array(attributes).flatten.each { |attr| @handler.collect_attribute(k, attr) }
         end
       end
-      alias collect_attribute on_attribute
-
-      # "start_element" handler just pushes an element to stack and assigns a pointer to parent element
-      #
-      # @api private
-      def start_element(name) #:nodoc:
-        element = Ox::Mapper::Element.new(name, @line, @column)
-        element.parent = @stack.last
-
-        @stack.push(element)
-      end
-
-      # attributes handler
-      #
-      # @api private
-      def attr(name, value) #:nodoc:
-        @stack.last[name] = transform_attribute(name, value) if collect_attribute?(name)
-      end
-
-      # @api private
-      def text(value) #:nodoc:
-        @stack.last.text = value && value.strip if @stack.size > 0
-      end
-      alias cdata text
-
-      # "end_element" handler pushes an element if it is attached to callbacks
-      # @api private
-      def end_element(name) #:nodoc:
-        element = @stack.pop
-
-        # fire callback
-        if @callbacks.has_key?(element.name)
-          element.text.encode!(OUTPUT_ENCODING) if element.text && !element.text.ascii_only?
-
-          @callbacks[element.name].each { |cb| cb.call(element) }
-        end
-      end
-
-      private
-      def collect_attribute?(name) #:nodoc:
-        top_name = @stack.size > 0 && @stack.last.name
-
-        top_name &&
-            @attribute_callbacks.key?(top_name) &&
-            @attribute_callbacks[top_name].key?(name)
-      end
-
-      # Fetch callback for attribute +name+
-      def attribute_callback(name) #:nodoc:
-        @attribute_callbacks[@stack.last.name][name]
-      end
-
-      # Apply callback to attribute or just transcode +value+ if callback is empty
-      def transform_attribute(name, value) #:nodoc:
-        if (proc = attribute_callback(name))
-          proc[value]
-        else
-          encode(value)
-        end
-      end
-
-      # encode +str+ to utf-8
-      def encode(str) #:nodoc:
-        str && !str.ascii_only? ? str.encode!(OUTPUT_ENCODING) : str
-      end # def encode
-
-    end # class Mapper
-  end
-end
+      alias on_attribute collect_attribute
+    end # class Parser
+  end # module Mapper
+end # module Ox

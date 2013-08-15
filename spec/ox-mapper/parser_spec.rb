@@ -26,11 +26,11 @@ describe Ox::Mapper::Parser do
     XML
   end
 
-  describe '#on_element' do
+  describe '#on' do
     let(:elements) { [] }
 
     context 'when one element given' do
-      before { parser.on_element(:offer) { |e| elements << e } }
+      before { parser.on(:offer) { |e| elements << e } }
       before { parser.parse(xml) }
 
       it 'should execute given block on each given element' do
@@ -39,8 +39,14 @@ describe Ox::Mapper::Parser do
     end
 
     context 'when multiple elements given' do
-      before { parser.on_element(:offer, :price, 'ns:offer') { |e| elements << e } }
-      before { parser.collect_attribute(:offer => :id, :price => :value, 'ns:offer' => 'ns:id') }
+      before do
+        parser.on :offer,
+                  :price,
+                  'ns:offer',
+                  :attributes => [:id, :value, 'ns:id'] do |e|
+          elements << e
+        end
+      end
       before { parser.parse(xml) }
 
       subject { elements }
@@ -67,29 +73,6 @@ describe Ox::Mapper::Parser do
         elements[0].parent.should be elements[1]
         elements[1].parent.name.should eq :xml
       end
-    end
-  end
-
-  describe '#on_attribute' do
-    let(:elements) { [] }
-    before { parser.on_element(:offer) { |e| elements << e } }
-
-    subject { elements[0] }
-
-    context 'when no block given' do
-      before { parser.collect_attribute(:offer => :id) }
-      before { parser.parse(xml) }
-
-      its([:id]) { should eq '1' }
-      its(:attributes) { should_not have_key(:id2) }
-    end
-
-    context 'when block given' do
-      before { parser.on_attribute(:offer => [:id, :id2]) { |v| Float(v) } }
-      before { parser.parse(xml) }
-
-      its([:id]) { should eq 1.0 }
-      its([:id2]) { should eq 0.0 }
     end
   end
 
