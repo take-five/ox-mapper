@@ -37,7 +37,7 @@ module Ox
         attributes = Array(options[:attributes]).flatten
 
         elements.each do |e|
-          @handler.setup_element_callback(e, block)
+          @handler.setup_element_callback(e, :end, block)
 
           attributes.each { |attr| @handler.collect_attribute(e, attr) }
         end
